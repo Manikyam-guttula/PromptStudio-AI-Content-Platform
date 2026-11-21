@@ -21,14 +21,19 @@ load_dotenv()
 app = Flask(__name__)
 
 # Database configuration
-DB_PATH = os.path.join(
-    app.root_path,
-    "instance",
-    "app.db"
-)
+import os
+
+if os.environ.get("VERCEL"):
+    DB_PATH = "/tmp/database.db"
+else:
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    DB_PATH = os.path.join(
+        BASE_DIR, "instance", "database.db"
+    )
 
 os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
 
+os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
 
 # Database connection
 def db():
