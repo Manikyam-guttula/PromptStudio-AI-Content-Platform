@@ -1,156 +1,55 @@
-# PromptStudio | AI Content Platform
+## 🚀 Live Demo
 
-**Live Website:** https://prompt-studio-ai-content-platform.vercel.app
+**PromptStudio – AI Content Platform** is deployed and available online.
 
-PromptStudio is an AI-powered content generation platform developed as part of the Prompt Engineering for AI internship capstone project.
+🌐 **Live Website:** https://prompt-studio-ai-content-platform.vercel.app
 
-It provides simple tools to generate content, summarize text, analyze sentiment, and view activity analytics through a user-friendly dashboard.
+📂 **GitHub Repository:** https://github.com/Manikyam-guttula/PromptStudio-AI-Content-Platform
 
-## 🌐 Live Demo
+## ✨ Main Features
 
-Visit the deployed application:
+- **AI Content Generator:** Generate blogs, social media posts, emails, and other content.
+- **Text Summarizer:** Convert long text into short, clear summaries.
+- **Sentiment Analyzer:** Analyze text and identify positive, negative, or neutral sentiment.
+- **Prompt History:** View previously generated content.
+- **Analytics Dashboard:** Track platform activities and usage.
+- **Responsive Design:** Access the platform across different screen sizes.
 
-**https://prompt-studio-ai-content-platform.vercel.app**
-
-## Features
-
-- **AI Content Generation:** Generate content based on user prompts.
-- **Text Summarization:** Convert long text into concise summaries.
-- **Sentiment Analysis:** Identify the sentiment of text.
-- **Prompt History:** Store and view previous activities.
-- **Analytics Dashboard:** Visualize platform usage and activities.
-- **User-Friendly Interface:** Modern and responsive dashboard.
-- **Demo Mode:** Use basic demo functionality without an API key.
-
-## Technologies Used
+## 🛠️ Technologies Used
 
 - Python
 - Flask
+- Groq API
+- SQLite
 - HTML
 - CSS
 - JavaScript
-- SQLite
-- Chart.js
-- OpenAI API (optional)
+- Vercel
+- GitHub
 
-## Project Structure
+## ☁️ Deployment
 
-```text
-PromptStudio/
-│
-├── app.py
-├── requirements.txt
-├── README.md
-├── .env.example
-├── .gitignore
-│
-├── services/
-│   ├── __init__.py
-│   └── ai_service.py
-│
-├── templates/
-│   └── index.html
-│
-├── static/
-│   ├── css/
-│   │   └── style.css
-│   └── js/
-│       └── app.js
-│
-└── instance/
-    └── app.db
-```
-
-## Installation and Setup
-
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/YOUR_USERNAME/PromptStudio-AI-Content-Platform.git
-```
-
-### 2. Open the project folder
-
-```bash
-cd PromptStudio-AI-Content-Platform
-```
-
-### 3. Create a virtual environment
-
-```bash
-python -m venv .venv
-```
-
-### 4. Activate the virtual environment
-
-For Windows:
-
-```bash
-.venv\Scripts\activate
-```
-
-### 5. Install dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 6. Configure the OpenAI API (Optional)
-
-Create a `.env` file in the project folder and add:
-
-```env
-OPENAI_API_KEY=your_api_key_here
-OPENAI_MODEL=gpt-4.1-mini
-```
-
-Keep your API key private. Never upload the `.env` file to GitHub.
-
-### 7. Run the application
-
-```bash
-python app.py
-```
-
-Open your browser and visit:
-
-http://127.0.0.1:5000
-
-## Application Modules
-
-| Module | Description |
-|---|---|
-| Content Generation | Generates content from prompts |
-| Text Summarization | Creates short summaries |
-| Sentiment Analysis | Analyzes text sentiment |
-| Prompt History | Stores previous activities |
-| Analytics | Displays usage statistics |
-
-## Database
-
-PromptStudio uses SQLite to store prompt history and activity information.
-
-## Deployment
-
-The application is deployed using **Vercel**.
-
-- **Live Website:** https://prompt-studio-ai-content-platform.vercel.app
-- **Deployment Platform:** Vercel
 - **Source Code:** GitHub
+- **Hosting Platform:** Vercel
+- **Production Branch:** `main`
+- **Deployment Status:** Ready
+- **AI Provider:** Groq API
 
-## Future Enhancements
+## 🔐 Environment Configuration
 
-- More AI-powered content tools
-- Advanced prompt templates
-- Improved sentiment analysis
-- Export generated content
-- User authentication
-- Enhanced analytics
+The application uses environment variables to securely configure the AI API.
 
-## Author
+Required variables:
 
-Developed as an internship capstone project for Prompt Engineering for AI.
+- `GROQ_API_KEY`
+- `GROQ_MODEL`
 
-## License
+API keys are stored securely in Vercel Environment Variables and are not included in the public repository.
 
-This project is developed for educational purposes.
+## 👨‍💻 Project Information
+
+**Project Name:** PromptStudio – AI Content Platform
+
+**Project Type:** Internship Capstone Project
+
+**Purpose:** To provide an AI-powered workspace for content generation, text summarization, and sentiment analysis.
