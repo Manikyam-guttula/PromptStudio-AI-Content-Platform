@@ -1,9 +1,16 @@
-
 # PromptStudio | AI Content Platform
+
+**Live Website:** https://prompt-studio-ai-content-platform.vercel.app
 
 PromptStudio is an AI-powered content generation platform developed as part of the Prompt Engineering for AI internship capstone project.
 
 It provides simple tools to generate content, summarize text, analyze sentiment, and view activity analytics through a user-friendly dashboard.
+
+## 🌐 Live Demo
+
+Visit the deployed application:
+
+**https://prompt-studio-ai-content-platform.vercel.app**
 
 ## Features
 
@@ -122,6 +129,14 @@ http://127.0.0.1:5000
 ## Database
 
 PromptStudio uses SQLite to store prompt history and activity information.
+
+## Deployment
+
+The application is deployed using **Vercel**.
+
+- **Live Website:** https://prompt-studio-ai-content-platform.vercel.app
+- **Deployment Platform:** Vercel
+- **Source Code:** GitHub
 
 ## Future Enhancements
 
