@@ -1,25 +1,30 @@
 
 import os
 from pathlib import Path
-
 from dotenv import load_dotenv
 from groq import Groq
 
+# Project directory
 BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(BASE_DIR / ".env", override=True)
+
+# Load local .env without overwriting Vercel environment variables
+load_dotenv(BASE_DIR / ".env", override=False)
+
 
 def get_ai_client():
     api_key = os.getenv("GROQ_API_KEY", "").strip()
 
     if not api_key:
         raise RuntimeError(
-            "GROQ_API_KEY is missing. Check your .env file."
+            "GROQ_API_KEY is missing. Check your Vercel Environment Variables."
         )
 
     return Groq(api_key=api_key)
 
+
 def generate_ai_response(instructions, prompt, max_tokens=1200):
     client = get_ai_client()
+
     model = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
 
     response = client.chat.completions.create(
@@ -44,6 +49,7 @@ def generate_ai_response(instructions, prompt, max_tokens=1200):
 
     return result.strip()
 
+
 def generate_content(
     prompt,
     tone="Professional",
@@ -51,8 +57,8 @@ def generate_content(
 ):
     instructions = (
         "You are PromptStudio, a helpful professional AI writing assistant. "
-        "Create original, clear, useful content. Follow the requested "
-        "content type and writing tone."
+        "Create original, clear and useful content. "
+        "Follow the requested content type and writing tone."
     )
 
     user_prompt = (
@@ -68,15 +74,17 @@ def generate_content(
         max_tokens=1500
     )
 
+
 def summarize_text(text, length="Medium"):
     instructions = (
         "You are a professional text summarization assistant. "
-        "Preserve the important facts and meaning. Do not invent details."
+        "Preserve important facts and meaning. "
+        "Do not invent details."
     )
 
     user_prompt = (
-        f"Summarize the following text. "
-        f"Desired length: {length}.\n\n"
+        f"Summarize the following text.\n"
+        f"Desired length: {length}\n\n"
         f"Text:\n{text}"
     )
 
@@ -86,11 +94,12 @@ def summarize_text(text, length="Medium"):
         max_tokens=1000
     )
 
+
 def analyze_sentiment(text):
     instructions = (
         "You are a sentiment analysis assistant. "
         "Classify the text as Positive, Negative, or Neutral. "
-        "Give a short explanation and mention the main emotional tone."
+        "Give a short explanation and identify the main emotional tone."
     )
 
     return generate_ai_response(

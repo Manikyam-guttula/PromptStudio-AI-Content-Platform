@@ -1,5 +1,4 @@
-import webbrowser
-import threading
+
 import os
 import sqlite3
 from pathlib import Path
@@ -14,13 +13,20 @@ from services.ai_service import (
     analyze_sentiment
 )
 
+# Project directory
 BASE_DIR = Path(__file__).resolve().parent
-load_dotenv(BASE_DIR / ".env", override=True)
 
+# Do not overwrite environment variables configured in Vercel
+load_dotenv(BASE_DIR / ".env", override=False)
+
+# Flask configuration
 app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY", "development-secret-change-me")
+app.secret_key = os.getenv(
+    "SECRET_KEY",
+    "development-secret-change-me"
+)
 
-# Local database location
+# Database configuration
 if os.getenv("VERCEL"):
     DB_PATH = "/tmp/promptstudio.db"
 else:
@@ -28,10 +34,12 @@ else:
     DB_DIR.mkdir(parents=True, exist_ok=True)
     DB_PATH = str(DB_DIR / "promptstudio.db")
 
+
 def get_db_connection():
     connection = sqlite3.connect(DB_PATH)
     connection.row_factory = sqlite3.Row
     return connection
+
 
 def initialize_database():
     with get_db_connection() as connection:
@@ -45,6 +53,7 @@ def initialize_database():
             )
         """)
 
+
 def save_history(feature, user_input, result):
     created_at = datetime.now(timezone.utc).isoformat()
 
@@ -55,21 +64,28 @@ def save_history(feature, user_input, result):
             VALUES (?, ?, ?, ?)
         """, (feature, user_input, result, created_at))
 
-initialize_database()
 
 def get_request_data():
     return request.get_json(silent=True) or {}
 
-def error_response(error, status=400):
-    app.logger.exception("Request failed")
+
+def error_response(error, status=500):
+    app.logger.error("Request failed: %s", error)
+
     return jsonify({
         "success": False,
         "error": str(error)
     }), status
 
+
+# Initialize database
+initialize_database()
+
+
 @app.route("/")
 def index():
     return render_template("index.html")
+
 
 @app.route("/health")
 def health():
@@ -78,6 +94,7 @@ def health():
         "status": "running",
         "application": "PromptStudio"
     })
+
 
 @app.route("/generate", methods=["POST"])
 def content_generator():
@@ -91,12 +108,22 @@ def content_generator():
         ).strip()
 
         if not prompt:
-            return error_response("Please enter your prompt.")
+            return jsonify({
+                "success": False,
+                "error": "Please enter your prompt."
+            }), 400
 
         if len(prompt) > 10000:
-            return error_response("Prompt is too long. Use under 10,000 characters.")
+            return jsonify({
+                "success": False,
+                "error": "Prompt is too long."
+            }), 400
 
-        result = generate_content(prompt, tone, content_type)
+        result = generate_content(
+            prompt,
+            tone,
+            content_type
+        )
 
         save_history("Content Generator", prompt, result)
 
@@ -107,7 +134,8 @@ def content_generator():
         })
 
     except Exception as error:
-        return error_response(error, 500)
+        return error_response(error)
+
 
 @app.route("/summarize", methods=["POST"])
 def text_summarizer():
@@ -118,10 +146,16 @@ def text_summarizer():
         length = str(data.get("length", "Medium")).strip()
 
         if not text:
-            return error_response("Please enter text to summarize.")
+            return jsonify({
+                "success": False,
+                "error": "Please enter text to summarize."
+            }), 400
 
         if len(text) > 20000:
-            return error_response("Text is too long. Use under 20,000 characters.")
+            return jsonify({
+                "success": False,
+                "error": "Text is too long."
+            }), 400
 
         if length not in ("Short", "Medium", "Long"):
             length = "Medium"
@@ -137,19 +171,27 @@ def text_summarizer():
         })
 
     except Exception as error:
-        return error_response(error, 500)
+        return error_response(error)
+
 
 @app.route("/sentiment", methods=["POST"])
 def sentiment_analyzer():
     try:
         data = get_request_data()
+
         text = str(data.get("text", "")).strip()
 
         if not text:
-            return error_response("Please enter text to analyze.")
+            return jsonify({
+                "success": False,
+                "error": "Please enter text to analyze."
+            }), 400
 
         if len(text) > 10000:
-            return error_response("Text is too long. Use under 10,000 characters.")
+            return jsonify({
+                "success": False,
+                "error": "Text is too long."
+            }), 400
 
         result = analyze_sentiment(text)
 
@@ -162,7 +204,8 @@ def sentiment_analyzer():
         })
 
     except Exception as error:
-        return error_response(error, 500)
+        return error_response(error)
+
 
 @app.route("/history", methods=["GET"])
 def prompt_history():
@@ -181,7 +224,8 @@ def prompt_history():
         })
 
     except Exception as error:
-        return error_response(error, 500)
+        return error_response(error)
+
 
 @app.route("/analytics", methods=["GET"])
 def analytics():
@@ -206,11 +250,22 @@ def analytics():
         })
 
     except Exception as error:
-        return error_response(error, 500)
+        return error_response(error)
+
 
 if __name__ == "__main__":
+    import threading
+    import webbrowser
+
+    url = "http://127.0.0.1:5000"
+
+    threading.Timer(
+        1.5,
+        lambda: webbrowser.open(url)
+    ).start()
+
     app.run(
         host="127.0.0.1",
-        port=int(os.getenv("PORT", 5000)),
+        port=5000,
         debug=False
     )
