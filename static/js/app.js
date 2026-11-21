@@ -1,294 +1,324 @@
 
-const $ = (id) => document.getElementById(id);
+document.addEventListener("DOMContentLoaded", () => {
 
-let activityChart = null;
-let toastTimer = null;
+    const sections = document.querySelectorAll(".page-section");
+    const navButtons = document.querySelectorAll(".nav-btn");
 
-function showToast(message) {
-    const toast = $("toast");
-    toast.textContent = message;
-    toast.classList.add("show");
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toast.classList.remove("show"), 2500);
-}
-
-async function apiRequest(url, data = null) {
-    const options = data === null
-        ? {}
-        : {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data)
-        };
-
-    const response = await fetch(url, options);
-    const result = await response.json();
-
-    if (!response.ok) {
-        throw new Error(result.error || "Something went wrong.");
-    }
-
-    return result;
-}
-
-function navigate(page) {
-    document.querySelectorAll(".page").forEach(section => {
-        section.classList.toggle("active", section.id === page);
-    });
-
-    document.querySelectorAll(".nav-link").forEach(button => {
-        button.classList.toggle("active", button.dataset.page === page);
-    });
-
-    const selected = document.querySelector(`.nav-link[data-page="${page}"]`);
-    $("breadcrumb-title").textContent =
-        selected ? selected.textContent.trim().replace(/^[^\w]+/, "") : page;
-
-    if (page === "dashboard") loadDashboard();
-    if (page === "history") loadHistory();
-    if (page === "analytics") loadAnalytics();
-}
-
-document.querySelectorAll("[data-page]").forEach(button => {
-    button.addEventListener("click", () => navigate(button.dataset.page));
-});
-
-document.querySelectorAll("[data-open]").forEach(button => {
-    button.addEventListener("click", () => navigate(button.dataset.open));
-});
-
-async function generateContent() {
-    const prompt = $("prompt").value.trim();
-
-    if (!prompt) {
-        showToast("Please enter a prompt first.");
-        return;
-    }
-
-    const button = $("generate-btn");
-    button.disabled = true;
-    button.textContent = "Generating...";
-
-    $("generate-result").textContent = "Creating your content. Please wait...";
-
-    try {
-        const data = await apiRequest("/api/generate", {
-            prompt: prompt,
-            content_type: $("content-type").value,
-            tone: $("tone").value
+    // Navigation
+    function showSection(sectionId) {
+        sections.forEach(section => {
+            section.classList.toggle(
+                "hidden",
+                section.id !== sectionId
+            );
         });
 
-        $("generate-result").textContent = data.result;
-        $("copy-generate").disabled = false;
-        showToast("Content generated successfully!");
-        loadDashboard();
-    } catch (error) {
-        $("generate-result").textContent = error.message;
-        showToast(error.message);
-    } finally {
-        button.disabled = false;
-        button.textContent = "✦ Generate Content →";
-    }
-}
+        navButtons.forEach(button => {
+            button.classList.toggle(
+                "active",
+                button.dataset.section === sectionId
+            );
+        });
 
-async function summarizeText() {
-    const text = $("summary-input").value.trim();
-
-    if (!text) {
-        showToast("Please enter text to summarize.");
-        return;
+        if (sectionId === "history") loadHistory();
+        if (sectionId === "analytics") loadAnalytics();
+        if (sectionId === "dashboard") loadDashboard();
     }
 
-    const button = $("summarize-btn");
-    button.disabled = true;
-    button.textContent = "Summarizing...";
+    navButtons.forEach(button => {
+        button.addEventListener("click", () => {
+            showSection(button.dataset.section);
+        });
+    });
 
-    $("summary-result").textContent = "Preparing your summary...";
+    document.querySelectorAll("[data-go]").forEach(button => {
+        button.addEventListener("click", () => {
+            showSection(button.dataset.go);
+        });
+    });
 
-    try {
-        const data = await apiRequest("/api/summarize", { text });
-        $("summary-result").textContent = data.result;
-        $("copy-summary").disabled = false;
-        showToast("Summary created successfully!");
-        loadDashboard();
-    } catch (error) {
-        $("summary-result").textContent = error.message;
-        showToast(error.message);
-    } finally {
-        button.disabled = false;
-        button.textContent = "Summarize Text →";
-    }
-}
+    // Common API request function
+    async function sendRequest(url, data) {
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            body: JSON.stringify(data)
+        });
 
-async function analyzeSentiment() {
-    const text = $("sentiment-input").value.trim();
+        const raw = await response.text();
 
-    if (!text) {
-        showToast("Please enter text to analyze.");
-        return;
-    }
+        let result;
 
-    const button = $("sentiment-btn");
-    button.disabled = true;
-    button.textContent = "Analyzing...";
-
-    $("sentiment-result").textContent = "Analyzing your text...";
-
-    try {
-        const data = await apiRequest("/api/sentiment", { text });
-        const result = data.result;
-
-        $("sentiment-result").textContent =
-            typeof result === "string" ? result : JSON.stringify(result, null, 2);
-
-        showToast("Sentiment analysis completed!");
-        loadDashboard();
-    } catch (error) {
-        $("sentiment-result").textContent = error.message;
-        showToast(error.message);
-    } finally {
-        button.disabled = false;
-        button.textContent = "Analyze Sentiment →";
-    }
-}
-
-function copyResult(elementId) {
-    const text = $(elementId).textContent;
-
-    navigator.clipboard.writeText(text)
-        .then(() => showToast("Copied to clipboard!"))
-        .catch(() => showToast("Unable to copy. Please select the text manually."));
-}
-
-$("generate-btn").addEventListener("click", generateContent);
-$("summarize-btn").addEventListener("click", summarizeText);
-$("sentiment-btn").addEventListener("click", analyzeSentiment);
-
-$("copy-generate").addEventListener("click", () => copyResult("generate-result"));
-$("copy-summary").addEventListener("click", () => copyResult("summary-result"));
-
-async function loadDashboard() {
-    try {
-        const data = await apiRequest("/api/history");
-        const items = data.items || [];
-
-        const generated = items.filter(item =>
-            item.tool.toLowerCase().includes("generation")
-        ).length;
-
-        const summaries = items.filter(item =>
-            item.tool.toLowerCase().includes("summar")
-        ).length;
-
-        const sentiments = items.filter(item =>
-            item.tool.toLowerCase().includes("sentiment")
-        ).length;
-
-        $("total-operations").textContent = data.items.length;
-        $("total-generated").textContent = generated;
-        $("total-summaries").textContent = summaries;
-        $("total-sentiments").textContent = sentiments;
-
-        const recent = $("recent-activity");
-
-        if (!items.length) {
-            recent.textContent = "No activity yet. Start using your AI tools!";
-        } else {
-            recent.innerHTML = items.slice(0, 5).map(item => `
-                <div class="recent-item">
-                    <b>${escapeHTML(item.tool)}</b>
-                    <small>${escapeHTML(item.created_at)}</small>
-                </div>
-            `).join("");
+        try {
+            result = JSON.parse(raw);
+        } catch {
+            throw new Error(
+                "Server returned an unexpected response. Check Flask terminal."
+            );
         }
-    } catch (error) {
-        console.error("Dashboard error:", error);
+
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || "Request failed.");
+        }
+
+        return result;
     }
-}
 
-async function loadHistory() {
-    const container = $("history-list");
-    container.textContent = "Loading history...";
+    // Show loading state
+    function setLoading(button, loadingText, normalText) {
+        button.disabled = loadingText !== null;
+        button.textContent = loadingText || normalText;
+    }
 
-    try {
-        const data = await apiRequest("/api/history");
-        const items = data.items || [];
+    // CONTENT GENERATOR
+    const generateBtn = document.getElementById("generateBtn");
 
-        if (!items.length) {
-            container.textContent = "No history available yet.";
+    generateBtn.addEventListener("click", async () => {
+        const prompt = document.getElementById("prompt").value.trim();
+        const tone = document.getElementById("tone").value;
+        const contentType = document.getElementById("contentType").value;
+        const output = document.getElementById("generateResult");
+
+        if (!prompt) {
+            output.textContent = "Please enter your prompt.";
             return;
         }
 
-        container.innerHTML = items.map(item => `
-            <div class="history-item">
-                <b>${escapeHTML(item.tool)}</b>
-                <small>${escapeHTML(item.created_at)}</small>
-                <p>${escapeHTML(item.prompt.slice(0, 220))}</p>
-            </div>
-        `).join("");
-    } catch (error) {
-        container.textContent = error.message;
-    }
-}
+        setLoading(generateBtn, "Generating...", "Generate Content");
+        output.textContent = "AI is generating your content...";
 
-async function loadAnalytics() {
-    try {
-        const data = await apiRequest("/api/analytics");
+        try {
+            const data = await sendRequest("/generate", {
+                prompt: prompt,
+                tone: tone,
+                content_type: contentType
+            });
 
-        $("analytics-total").textContent = data.total;
+            output.textContent = data.result;
+            loadDashboard();
 
-        const labels = data.by_tool.map(item => item.tool);
-        const values = data.by_tool.map(item => item.count);
+        } catch (error) {
+            output.textContent = "Error: " + error.message;
+        } finally {
+            setLoading(generateBtn, null, "Generate Content");
+        }
+    });
 
-        const canvas = $("activity-chart");
-        if (!canvas) return;
+    // TEXT SUMMARIZER
+    const summarizeBtn = document.getElementById("summarizeBtn");
 
-        if (activityChart) activityChart.destroy();
+    summarizeBtn.addEventListener("click", async () => {
+        const text = document.getElementById("summaryText").value.trim();
+        const length = document.getElementById("summaryLength").value;
+        const output = document.getElementById("summaryResult");
 
-        activityChart = new Chart(canvas, {
-            type: "bar",
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: "Number of activities",
-                    data: values,
-                    backgroundColor: "#8272e9",
-                    borderRadius: 7,
-                    maxBarThickness: 55
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: { precision: 0 }
-                    }
-                }
+        if (!text) {
+            output.textContent = "Please enter text to summarize.";
+            return;
+        }
+
+        setLoading(summarizeBtn, "Summarizing...", "Generate Summary");
+        output.textContent = "AI is summarizing your text...";
+
+        try {
+            const data = await sendRequest("/summarize", {
+                text: text,
+                length: length
+            });
+
+            output.textContent = data.summary;
+            loadDashboard();
+
+        } catch (error) {
+            output.textContent = "Error: " + error.message;
+        } finally {
+            setLoading(summarizeBtn, null, "Generate Summary");
+        }
+    });
+
+    // SENTIMENT ANALYZER
+    const sentimentBtn = document.getElementById("sentimentBtn");
+
+    sentimentBtn.addEventListener("click", async () => {
+        const text = document.getElementById("sentimentText").value.trim();
+        const output = document.getElementById("sentimentResult");
+
+        if (!text) {
+            output.textContent = "Please enter text to analyze.";
+            return;
+        }
+
+        setLoading(sentimentBtn, "Analyzing...", "Analyze Sentiment");
+        output.textContent = "AI is analyzing your text...";
+
+        try {
+            const data = await sendRequest("/sentiment", {
+                text: text
+            });
+
+            output.textContent = data.sentiment;
+            loadDashboard();
+
+        } catch (error) {
+            output.textContent = "Error: " + error.message;
+        } finally {
+            setLoading(sentimentBtn, null, "Analyze Sentiment");
+        }
+    });
+
+    // COPY RESULT
+    document.querySelectorAll("[data-copy]").forEach(button => {
+        button.addEventListener("click", async () => {
+            const target = document.getElementById(button.dataset.copy);
+            const text = target.textContent.trim();
+
+            if (!text) return;
+
+            try {
+                await navigator.clipboard.writeText(text);
+                button.textContent = "Copied!";
+
+                setTimeout(() => {
+                    button.textContent = button.dataset.copy === "summaryResult"
+                        ? "Copy Summary"
+                        : "Copy Result";
+                }, 1500);
+
+            } catch {
+                alert("Unable to copy. Please select and copy the text manually.");
             }
         });
-    } catch (error) {
-        console.error("Analytics error:", error);
+    });
+
+    // PROMPT HISTORY
+    async function loadHistory() {
+        const container = document.getElementById("historyList");
+        container.textContent = "Loading history...";
+
+        try {
+            const response = await fetch("/history");
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.error || "Unable to load history.");
+            }
+
+            container.replaceChildren();
+
+            if (!data.history.length) {
+                container.textContent = "No prompt history available yet.";
+                return;
+            }
+
+            data.history.forEach(item => {
+                const card = document.createElement("article");
+                card.className = "history-item";
+
+                const heading = document.createElement("h3");
+                heading.textContent = item.feature;
+
+                const input = document.createElement("p");
+                input.textContent = "Input: " + item.user_input;
+
+                const result = document.createElement("p");
+                result.textContent = "Result: " + item.result;
+
+                const date = document.createElement("div");
+                date.className = "history-date";
+
+                const parsedDate = new Date(item.created_at);
+                date.textContent = Number.isNaN(parsedDate.getTime())
+                    ? item.created_at
+                    : parsedDate.toLocaleString();
+
+                card.append(heading, input, result, date);
+                container.appendChild(card);
+            });
+
+        } catch (error) {
+            container.textContent = "Error: " + error.message;
+        }
     }
-}
 
-function escapeHTML(value) {
-    return String(value ?? "").replace(/[&<>"']/g, character => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#039;"
-    })[character]);
-}
+    // ANALYTICS
+    async function loadAnalytics() {
+        const totalElement = document.getElementById("analyticsTotal");
+        const bars = document.getElementById("analyticsBars");
 
-$("refresh-history").addEventListener("click", loadHistory);
-$("refresh-analytics").addEventListener("click", loadAnalytics);
+        totalElement.textContent = "Loading...";
+        bars.replaceChildren();
 
-document.addEventListener("DOMContentLoaded", () => {
-    loadDashboard();
+        try {
+            const response = await fetch("/analytics");
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.error || "Unable to load analytics.");
+            }
+
+            totalElement.textContent = data.total_activities;
+
+            if (!data.feature_stats.length) {
+                bars.textContent = "No analytics data available yet.";
+                return;
+            }
+
+            const maxCount = Math.max(
+                ...data.feature_stats.map(item => item.count),
+                1
+            );
+
+            data.feature_stats.forEach(item => {
+                const row = document.createElement("div");
+                row.className = "analytics-row";
+
+                const label = document.createElement("div");
+                label.className = "analytics-label";
+
+                const name = document.createElement("span");
+                name.textContent = item.feature;
+
+                const count = document.createElement("span");
+                count.textContent = item.count;
+
+                label.append(name, count);
+
+                const track = document.createElement("div");
+                track.className = "bar-track";
+
+                const fill = document.createElement("div");
+                fill.className = "bar-fill";
+                fill.style.width = (item.count / maxCount * 100) + "%";
+
+                track.appendChild(fill);
+                row.append(label, track);
+                bars.appendChild(row);
+            });
+
+        } catch (error) {
+            totalElement.textContent = "0";
+            bars.textContent = "Error: " + error.message;
+        }
+    }
+
+    // DASHBOARD TOTAL
+    async function loadDashboard() {
+        try {
+            const response = await fetch("/analytics");
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                document.getElementById("totalActivities").textContent =
+                    data.total_activities;
+            }
+        } catch (error) {
+            console.error("Dashboard loading error:", error);
+        }
+    }
+
+    // Initial dashboard data
+    showSection("dashboard");
 });

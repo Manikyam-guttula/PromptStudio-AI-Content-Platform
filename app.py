@@ -1,235 +1,216 @@
-
-import os
-import sqlite3
 import webbrowser
 import threading
+import os
+import sqlite3
+from pathlib import Path
+from datetime import datetime, timezone
 
-from datetime import datetime
 from flask import Flask, render_template, request, jsonify
 from dotenv import load_dotenv
 
 from services.ai_service import (
-    generate_text,
+    generate_content,
     summarize_text,
     analyze_sentiment
 )
 
-# Load environment variables
-load_dotenv()
+BASE_DIR = Path(__file__).resolve().parent
+load_dotenv(BASE_DIR / ".env", override=True)
 
-# Flask configuration
 app = Flask(__name__)
+app.secret_key = os.getenv("SECRET_KEY", "development-secret-change-me")
 
-# Database configuration
-import os
-
-if os.environ.get("VERCEL"):
-    DB_PATH = "/tmp/database.db"
+# Local database location
+if os.getenv("VERCEL"):
+    DB_PATH = "/tmp/promptstudio.db"
 else:
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    DB_PATH = os.path.join(
-        BASE_DIR, "instance", "database.db"
-    )
+    DB_DIR = BASE_DIR / "instance"
+    DB_DIR.mkdir(parents=True, exist_ok=True)
+    DB_PATH = str(DB_DIR / "promptstudio.db")
 
-os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+def get_db_connection():
+    connection = sqlite3.connect(DB_PATH)
+    connection.row_factory = sqlite3.Row
+    return connection
 
-os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-
-# Database connection
-def db():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
-
-
-# Initialize database
-def init_db():
-    with db() as conn:
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS generations (
+def initialize_database():
+    with get_db_connection() as connection:
+        connection.execute("""
+            CREATE TABLE IF NOT EXISTS prompt_history (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                tool TEXT NOT NULL,
-                prompt TEXT NOT NULL,
+                feature TEXT NOT NULL,
+                user_input TEXT NOT NULL,
                 result TEXT NOT NULL,
                 created_at TEXT NOT NULL
             )
         """)
 
+def save_history(feature, user_input, result):
+    created_at = datetime.now(timezone.utc).isoformat()
 
-# Home page
+    with get_db_connection() as connection:
+        connection.execute("""
+            INSERT INTO prompt_history
+            (feature, user_input, result, created_at)
+            VALUES (?, ?, ?, ?)
+        """, (feature, user_input, result, created_at))
+
+initialize_database()
+
+def get_request_data():
+    return request.get_json(silent=True) or {}
+
+def error_response(error, status=400):
+    app.logger.exception("Request failed")
+    return jsonify({
+        "success": False,
+        "error": str(error)
+    }), status
+
 @app.route("/")
 def index():
     return render_template("index.html")
 
+@app.route("/health")
+def health():
+    return jsonify({
+        "success": True,
+        "status": "running",
+        "application": "PromptStudio"
+    })
 
-# AI Content Generation
-@app.route("/api/generate", methods=["POST"])
-def api_generate():
-
-    data = request.get_json(silent=True) or {}
-
-    prompt = (data.get("prompt") or "").strip()
-    content_type = data.get("content_type", "Blog post")
-    tone = data.get("tone", "Professional")
-
-    if not prompt:
-        return jsonify(error="Please enter a prompt."), 400
-
+@app.route("/generate", methods=["POST"])
+def content_generator():
     try:
-        result = generate_text(
-            prompt,
-            content_type,
-            tone
-        )
+        data = get_request_data()
 
-        save_result(
-            "Content generation",
-            prompt,
-            result
-        )
+        prompt = str(data.get("prompt", "")).strip()
+        tone = str(data.get("tone", "Professional")).strip()
+        content_type = str(
+            data.get("content_type", "Social Media Post")
+        ).strip()
 
-        return jsonify(
-            result=result,
-            mode="AI" if os.getenv("OPENAI_API_KEY") else "Demo"
-        )
+        if not prompt:
+            return error_response("Please enter your prompt.")
 
-    except Exception as e:
-        app.logger.exception("Content generation failed")
-        return jsonify(error=str(e)), 500
+        if len(prompt) > 10000:
+            return error_response("Prompt is too long. Use under 10,000 characters.")
 
+        result = generate_content(prompt, tone, content_type)
 
-# Text Summarization
-@app.route("/api/summarize", methods=["POST"])
-def api_summarize():
+        save_history("Content Generator", prompt, result)
 
-    data = request.get_json(silent=True) or {}
+        return jsonify({
+            "success": True,
+            "result": result,
+            "content": result
+        })
 
-    source = (data.get("text") or "").strip()
+    except Exception as error:
+        return error_response(error, 500)
 
-    if not source:
-        return jsonify(error="Please enter text to summarize."), 400
-
+@app.route("/summarize", methods=["POST"])
+def text_summarizer():
     try:
-        result = summarize_text(source)
+        data = get_request_data()
 
-        save_result(
-            "Summarization",
-            source[:500],
-            result
-        )
+        text = str(data.get("text", "")).strip()
+        length = str(data.get("length", "Medium")).strip()
 
-        return jsonify(result=result)
+        if not text:
+            return error_response("Please enter text to summarize.")
 
-    except Exception as e:
-        app.logger.exception("Summarization failed")
-        return jsonify(error=str(e)), 500
+        if len(text) > 20000:
+            return error_response("Text is too long. Use under 20,000 characters.")
 
+        if length not in ("Short", "Medium", "Long"):
+            length = "Medium"
 
-# Sentiment Analysis
-@app.route("/api/sentiment", methods=["POST"])
-def api_sentiment():
+        result = summarize_text(text, length)
 
-    data = request.get_json(silent=True) or {}
+        save_history("Text Summarizer", text, result)
 
-    source = (data.get("text") or "").strip()
+        return jsonify({
+            "success": True,
+            "result": result,
+            "summary": result
+        })
 
-    if not source:
-        return jsonify(error="Please enter text to analyze."), 400
+    except Exception as error:
+        return error_response(error, 500)
 
+@app.route("/sentiment", methods=["POST"])
+def sentiment_analyzer():
     try:
-        result = analyze_sentiment(source)
+        data = get_request_data()
+        text = str(data.get("text", "")).strip()
 
-        save_result(
-            "Sentiment analysis",
-            source[:500],
-            result
-        )
+        if not text:
+            return error_response("Please enter text to analyze.")
 
-        return jsonify(result=result)
+        if len(text) > 10000:
+            return error_response("Text is too long. Use under 10,000 characters.")
 
-    except Exception as e:
-        app.logger.exception("Sentiment analysis failed")
-        return jsonify(error=str(e)), 500
+        result = analyze_sentiment(text)
 
+        save_history("Sentiment Analyzer", text, result)
 
-# Prompt History
-@app.route("/api/history")
-def api_history():
+        return jsonify({
+            "success": True,
+            "result": result,
+            "sentiment": result
+        })
 
-    with db() as conn:
+    except Exception as error:
+        return error_response(error, 500)
 
-        rows = conn.execute("""
-            SELECT id, tool, prompt, result, created_at
-            FROM generations
-            ORDER BY id DESC
-            LIMIT 30
-        """).fetchall()
+@app.route("/history", methods=["GET"])
+def prompt_history():
+    try:
+        with get_db_connection() as connection:
+            records = connection.execute("""
+                SELECT id, feature, user_input, result, created_at
+                FROM prompt_history
+                ORDER BY id DESC
+                LIMIT 100
+            """).fetchall()
 
-    return jsonify(
-        items=[dict(row) for row in rows]
-    )
+        return jsonify({
+            "success": True,
+            "history": [dict(row) for row in records]
+        })
 
+    except Exception as error:
+        return error_response(error, 500)
 
-# Analytics Dashboard
-@app.route("/api/analytics")
-def api_analytics():
+@app.route("/analytics", methods=["GET"])
+def analytics():
+    try:
+        with get_db_connection() as connection:
+            total = connection.execute("""
+                SELECT COUNT(*) AS total
+                FROM prompt_history
+            """).fetchone()["total"]
 
-    with db() as conn:
+            stats = connection.execute("""
+                SELECT feature, COUNT(*) AS count
+                FROM prompt_history
+                GROUP BY feature
+                ORDER BY count DESC
+            """).fetchall()
 
-        total = conn.execute(
-            "SELECT COUNT(*) FROM generations"
-        ).fetchone()[0]
+        return jsonify({
+            "success": True,
+            "total_activities": total,
+            "feature_stats": [dict(row) for row in stats]
+        })
 
-        by_tool = conn.execute("""
-            SELECT tool, COUNT(*) AS count
-            FROM generations
-            GROUP BY tool
-            ORDER BY count DESC
-        """).fetchall()
+    except Exception as error:
+        return error_response(error, 500)
 
-    return jsonify(
-        total=total,
-        by_tool=[dict(row) for row in by_tool]
-    )
-
-
-# Save Results in Database
-def save_result(tool, prompt, result):
-
-    with db() as conn:
-
-        conn.execute("""
-            INSERT INTO generations
-            (tool, prompt, result, created_at)
-            VALUES (?, ?, ?, ?)
-        """, (
-            tool,
-            prompt,
-            result,
-            datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        ))
-
-
-# Initialize database
-init_db()
-
-
-# Run Flask and Automatically Open Browser
 if __name__ == "__main__":
-
-    url = "http://127.0.0.1:5000"
-
-    def open_browser():
-        webbrowser.open_new(url)
-
-    threading.Timer(
-        1.5,
-        open_browser
-    ).start()
-
     app.run(
         host="127.0.0.1",
-        port=5000,
-        debug=True,
-        use_reloader=False
+        port=int(os.getenv("PORT", 5000)),
+        debug=False
     )

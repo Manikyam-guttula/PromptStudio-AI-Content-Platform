@@ -1,66 +1,100 @@
+
 import os
-import re
+from pathlib import Path
 
-def _openai_response(instructions, user_input):
-    """Use the OpenAI API when OPENAI_API_KEY is configured."""
-    if not os.getenv("OPENAI_API_KEY"):
-        return None
-    try:
-        from openai import OpenAI
-        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        response = client.responses.create(
-            model=os.getenv("OPENAI_MODEL", "gpt-4.1-mini"),
-            instructions=instructions,
-            input=user_input
+from dotenv import load_dotenv
+from groq import Groq
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env", override=True)
+
+def get_ai_client():
+    api_key = os.getenv("GROQ_API_KEY", "").strip()
+
+    if not api_key:
+        raise RuntimeError(
+            "GROQ_API_KEY is missing. Check your .env file."
         )
-        return response.output_text
-    except Exception as exc:
-        raise RuntimeError(f"AI provider error: {exc}") from exc
 
-def generate_text(prompt, content_type="Blog post", tone="Professional"):
+    return Groq(api_key=api_key)
+
+def generate_ai_response(instructions, prompt, max_tokens=1200):
+    client = get_ai_client()
+    model = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
+
+    response = client.chat.completions.create(
+        model=model,
+        messages=[
+            {
+                "role": "system",
+                "content": instructions
+            },
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ],
+        max_completion_tokens=max_tokens
+    )
+
+    result = response.choices[0].message.content
+
+    if not result:
+        raise RuntimeError("The AI returned an empty response.")
+
+    return result.strip()
+
+def generate_content(
+    prompt,
+    tone="Professional",
+    content_type="Social Media Post"
+):
     instructions = (
-        "You are a helpful content-generation assistant. "
-        "Create clear, useful, original content. Follow the requested format and tone. "
-        "Do not invent citations or factual sources."
-    )
-    request = f"Content type: {content_type}\nTone: {tone}\nUser brief: {prompt}"
-    result = _openai_response(instructions, request)
-    if result:
-        return result
-    return (
-        f"# {content_type}: {prompt[:70].strip()}\n\n"
-        f"**Tone:** {tone}\n\n"
-        "This is a demonstration response so you can test the website before connecting an AI API. "
-        "Add an API key to the `.env` file to generate original AI content.\n\n"
-        f"**Your brief:** {prompt}\n\n"
-        "## Suggested structure\n"
-        "1. Introduction and context\n"
-        "2. Main ideas and supporting details\n"
-        "3. Practical example or recommendations\n"
-        "4. Conclusion and next steps\n"
+        "You are PromptStudio, a helpful professional AI writing assistant. "
+        "Create original, clear, useful content. Follow the requested "
+        "content type and writing tone."
     )
 
-def summarize_text(text):
-    result = _openai_response(
-        "Summarize the supplied text accurately. Preserve its key points. Do not add facts.",
-        text
+    user_prompt = (
+        f"Content type: {content_type}\n"
+        f"Writing tone: {tone}\n"
+        f"User request: {prompt}\n\n"
+        "Generate the requested content."
     )
-    if result:
-        return result
-    sentences = re.split(r'(?<=[.!?])\s+', text)
-    return " ".join(sentences[:3]) + ("\n\n[Demo summary: connect an AI API for an intelligent summary.]" if len(sentences) > 3 else "\n\n[Demo mode]")
+
+    return generate_ai_response(
+        instructions,
+        user_prompt,
+        max_tokens=1500
+    )
+
+def summarize_text(text, length="Medium"):
+    instructions = (
+        "You are a professional text summarization assistant. "
+        "Preserve the important facts and meaning. Do not invent details."
+    )
+
+    user_prompt = (
+        f"Summarize the following text. "
+        f"Desired length: {length}.\n\n"
+        f"Text:\n{text}"
+    )
+
+    return generate_ai_response(
+        instructions,
+        user_prompt,
+        max_tokens=1000
+    )
 
 def analyze_sentiment(text):
-    result = _openai_response(
-        "Classify the sentiment as Positive, Negative, or Neutral. Give a short explanation. "
-        "Return concise plain text.",
-        text
+    instructions = (
+        "You are a sentiment analysis assistant. "
+        "Classify the text as Positive, Negative, or Neutral. "
+        "Give a short explanation and mention the main emotional tone."
     )
-    if result:
-        return result
-    positive = {"good", "great", "excellent", "happy", "love", "amazing", "success", "useful", "best"}
-    negative = {"bad", "poor", "terrible", "hate", "sad", "worst", "problem", "fail", "angry"}
-    words = set(re.findall(r"[a-z']+", text.lower()))
-    p, n = len(words & positive), len(words & negative)
-    label = "Positive" if p > n else "Negative" if n > p else "Neutral"
-    return f"{label} (demo analysis)\nPositive keywords: {p} · Negative keywords: {n}\nConnect an AI API or trained NLP model for more reliable contextual analysis."
+
+    return generate_ai_response(
+        instructions,
+        f"Analyze the sentiment of this text:\n\n{text}",
+        max_tokens=500
+    )
