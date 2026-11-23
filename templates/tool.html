@@ -1,0 +1,201 @@
+
+{% extends "base.html" %}
+
+{% block title %}{{ tool.title }} - PromptStudio{% endblock %}
+
+{% block page_heading %}{{ tool.title }}{% endblock %}
+
+{% block content %}
+
+<div class="ps-tool-page">
+
+    <!-- Tool Header -->
+    <div class="ps-tool-hero">
+        <div>
+            <h1>{{ tool.title }}</h1>
+            <p>{{ tool.description }}</p>
+        </div>
+
+        <div class="ps-tool-icon">✨</div>
+    </div>
+
+    <!-- AI Workspace -->
+    <div class="ps-workspace">
+
+        <form id="toolForm" method="POST" action="{{ request.path }}">
+
+            <div class="ps-form-group">
+
+                <label for="user_input">Enter Your Text</label>
+
+                <textarea
+                    id="user_input"
+                    name="user_input"
+                    rows="10"
+                    placeholder="Type or paste your content here..."
+                    required
+                ></textarea>
+
+            </div>
+
+            <button
+                type="submit"
+                class="ps-generate-button"
+                id="generateButton"
+            >
+                ✨ Generate with AI
+            </button>
+
+        </form>
+
+        <!-- Loading -->
+        <div id="loadingMessage" style="display:none;">
+            <p>✨ AI is generating your result. Please wait...</p>
+        </div>
+
+        <!-- Error -->
+        <div
+            id="errorMessage"
+            class="alert alert-error"
+            style="display:none;"
+        ></div>
+
+        <!-- Result -->
+        <div
+            class="ps-result-card"
+            id="resultCard"
+            style="display:none;"
+        >
+
+            <div class="ps-result-header">
+
+                <h2>Generated Result</h2>
+
+                <button type="button" id="copyResult">
+                    Copy Result
+                </button>
+
+            </div>
+
+            <div
+                id="resultText"
+                class="ps-result-text"
+                style="white-space:pre-wrap;"
+            ></div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const form = document.getElementById("toolForm");
+
+    const button = document.getElementById("generateButton");
+
+    const loading = document.getElementById("loadingMessage");
+
+    const resultCard = document.getElementById("resultCard");
+
+    const resultText = document.getElementById("resultText");
+
+    const errorMessage = document.getElementById("errorMessage");
+
+    const copyButton = document.getElementById("copyResult");
+
+
+    // Generate AI Result
+    form.addEventListener("submit", async function (event) {
+
+        event.preventDefault();
+
+        const input = document.getElementById("user_input").value.trim();
+
+        if (!input) {
+            errorMessage.textContent = "Please enter some text.";
+            errorMessage.style.display = "block";
+            return;
+        }
+
+        button.disabled = true;
+        button.textContent = "Generating...";
+
+        loading.style.display = "block";
+        resultCard.style.display = "none";
+        errorMessage.style.display = "none";
+
+        try {
+
+            const response = await fetch(form.action, {
+                method: "POST",
+                body: new FormData(form)
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(
+                    data.message || "Something went wrong. Please try again."
+                );
+            }
+
+            resultText.textContent = data.result || "No result generated.";
+
+            resultCard.style.display = "block";
+
+        } catch (error) {
+
+            errorMessage.textContent = error.message;
+
+            errorMessage.style.display = "block";
+
+        } finally {
+
+            loading.style.display = "none";
+
+            button.disabled = false;
+
+            button.textContent = "✨ Generate with AI";
+
+        }
+
+    });
+
+
+    // Copy Result
+    copyButton.addEventListener("click", async function () {
+
+        try {
+
+            await navigator.clipboard.writeText(resultText.textContent);
+
+            copyButton.textContent = "Copied!";
+
+            setTimeout(function () {
+                copyButton.textContent = "Copy Result";
+            }, 1500);
+
+        } catch (error) {
+
+            errorMessage.textContent = "Unable to copy the result.";
+
+            errorMessage.style.display = "block";
+
+        }
+
+    });
+
+});
+
+</script>
+
+{% endblock %}

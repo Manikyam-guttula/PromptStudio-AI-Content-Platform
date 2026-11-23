@@ -1,0 +1,104 @@
+
+{% extends "base.html" %}
+
+{% block title %}Create Account - PromptStudio{% endblock %}
+
+{% block content %}
+
+<div class="auth-container">
+
+    <div class="auth-card">
+
+        <!-- Logo -->
+        <div class="auth-logo">
+            <div class="auth-logo-icon">✨</div>
+            <h1>PromptStudio</h1>
+            <p>AI Writing Assistant</p>
+        </div>
+
+        <!-- Heading -->
+        <div class="auth-heading">
+            <h2>Create Your Account</h2>
+            <p>Join PromptStudio and start creating with AI.</p>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Registration Form -->
+        <form method="POST" action="{{ url_for('register') }}">
+
+            <div class="form-group">
+                <label for="username">Username</label>
+
+                <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    placeholder="Enter your username"
+                    minlength="3"
+                    maxlength="50"
+                    autocomplete="username"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address</label>
+
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="Enter your email address"
+                    maxlength="120"
+                    autocomplete="email"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    placeholder="Create a password"
+                    minlength="6"
+                    autocomplete="new-password"
+                    required
+                >
+
+                <small class="input-hint">
+                    Password must contain at least 6 characters.
+                </small>
+            </div>
+
+            <button type="submit" class="auth-button">
+                Create Account →
+            </button>
+
+        </form>
+
+        <!-- Login Link -->
+        <div class="auth-footer">
+            <p>
+                Already have an account?
+                <a href="{{ url_for('login') }}">Login here</a>
+            </p>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

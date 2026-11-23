@@ -1,0 +1,181 @@
+
+{% extends "base.html" %}
+
+{% block title %}Dashboard - PromptStudio{% endblock %}
+{% block page_heading %}Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="ps-dashboard">
+
+    <!-- Welcome Section -->
+    <section class="ps-hero">
+
+        <div class="ps-hero-content">
+            <span class="ps-hero-label">✦ YOUR PERSONAL AI WORKSPACE</span>
+
+            <h1>
+                Welcome back,<br>
+                {{ session.get('username', 'User') }}! 👋
+            </h1>
+
+            <p>
+                Turn your ideas into amazing content.
+                Write smarter, create faster and achieve more with AI.
+            </p>
+
+            <a href="{{ url_for('content') }}" class="ps-hero-button">
+                ✨ Explore AI Tools
+            </a>
+        </div>
+
+        <div class="ps-hero-visual">
+            <div class="ps-hero-circle">
+                <span>💜</span>
+            </div>
+            <div class="ps-floating-icon">✍️</div>
+            <div class="ps-floating-icon second">🚀</div>
+        </div>
+
+    </section>
+
+
+    <!-- Statistics -->
+    <section class="ps-stats">
+
+        <div class="ps-stat-card">
+            <div class="ps-stat-top">
+                <span class="ps-stat-icon purple">📝</span>
+                <span class="ps-stat-label">ACTIVITY</span>
+            </div>
+            <h2>{{ total_prompts|default(0) }}</h2>
+            <p>Total Prompts</p>
+            <small>Your generated AI results</small>
+        </div>
+
+        <div class="ps-stat-card">
+            <div class="ps-stat-top">
+                <span class="ps-stat-icon blue">⚡</span>
+                <span class="ps-stat-label">FEATURES</span>
+            </div>
+            <h2>08</h2>
+            <p>Available AI Tools</p>
+            <small>Explore all AI features</small>
+        </div>
+
+        <div class="ps-stat-card">
+            <div class="ps-stat-top">
+                <span class="ps-stat-icon green">🟢</span>
+                <span class="ps-stat-label">WORKSPACE</span>
+            </div>
+            <h2 class="active-text">Active</h2>
+            <p>Workspace Status</p>
+            <small>Ready to create content</small>
+        </div>
+
+    </section>
+
+
+    <!-- AI Tools Heading -->
+    <section class="ps-tools-heading">
+
+        <div>
+            <span class="ps-section-label">DISCOVER AND CREATE</span>
+            <h2>Explore AI Tools</h2>
+            <p>Everything you need to write, improve and create content.</p>
+        </div>
+
+        <span class="ps-tool-count">8 TOOLS AVAILABLE</span>
+
+    </section>
+
+
+    <!-- AI Tools Grid -->
+    <section class="ps-feature-grid">
+
+        <a href="{{ url_for('content') }}" class="ps-feature-card">
+            <div class="ps-feature-icon icon-purple">✍️</div>
+            <div class="ps-card-number">01</div>
+            <h3>AI Content Generator</h3>
+            <p>Generate creative articles, paragraphs and high-quality content.</p>
+            <span class="ps-card-link">Explore Tool <b>→</b></span>
+        </a>
+
+        <a href="{{ url_for('summarizer') }}" class="ps-feature-card">
+            <div class="ps-feature-icon icon-blue">📄</div>
+            <div class="ps-card-number">02</div>
+            <h3>Text Summarizer</h3>
+            <p>Transform lengthy text into concise and meaningful summaries.</p>
+            <span class="ps-card-link">Explore Tool <b>→</b></span>
+        </a>
+
+        <a href="{{ url_for('sentiment') }}" class="ps-feature-card">
+            <div class="ps-feature-icon icon-pink">😊</div>
+            <div class="ps-card-number">03</div>
+            <h3>Sentiment Analysis</h3>
+            <p>Understand positive, negative and neutral emotions in text.</p>
+            <span class="ps-card-link">Explore Tool <b>→</b></span>
+        </a>
+
+        <a href="{{ url_for('email') }}" class="ps-feature-card">
+            <div class="ps-feature-icon icon-orange">📧</div>
+            <div class="ps-card-number">04</div>
+            <h3>Email Generator</h3>
+            <p>Create professional and well-structured emails in seconds.</p>
+            <span class="ps-card-link">Explore Tool <b>→</b></span>
+        </a>
+
+        <a href="{{ url_for('paraphrase') }}" class="ps-feature-card">
+            <div class="ps-feature-icon icon-green">🔄</div>
+            <div class="ps-card-number">05</div>
+            <h3>Paraphrasing Tool</h3>
+            <p>Rewrite sentences while keeping their original meaning.</p>
+            <span class="ps-card-link">Explore Tool <b>→</b></span>
+        </a>
+
+        <a href="{{ url_for('grammar') }}" class="ps-feature-card">
+            <div class="ps-feature-icon icon-cyan">✅</div>
+            <div class="ps-card-number">06</div>
+            <h3>Grammar Correction</h3>
+            <p>Improve grammar, spelling and sentence structure.</p>
+            <span class="ps-card-link">Explore Tool <b>→</b></span>
+        </a>
+
+        <a href="{{ url_for('caption') }}" class="ps-feature-card">
+            <div class="ps-feature-icon icon-red">📱</div>
+            <div class="ps-card-number">07</div>
+            <h3>Social Media Captions</h3>
+            <p>Create engaging captions and hashtags for social media.</p>
+            <span class="ps-card-link">Explore Tool <b>→</b></span>
+        </a>
+
+        <a href="{{ url_for('blog_titles') }}" class="ps-feature-card">
+            <div class="ps-feature-icon icon-yellow">💡</div>
+            <div class="ps-card-number">08</div>
+            <h3>Blog Title Generator</h3>
+            <p>Discover catchy, creative and attention-grabbing blog titles.</p>
+            <span class="ps-card-link">Explore Tool <b>→</b></span>
+        </a>
+
+    </section>
+
+
+    <!-- Bottom Banner -->
+    <section class="ps-bottom-banner">
+
+        <div class="ps-banner-icon">✨</div>
+
+        <div class="ps-banner-content">
+            <h2>Ready to create something amazing?</h2>
+            <p>Your next great idea starts with PromptStudio.</p>
+        </div>
+
+        <a href="{{ url_for('content') }}" class="ps-banner-button">
+            Start Creating →
+        </a>
+
+    </section>
+
+</div>
+
+{% endblock %}

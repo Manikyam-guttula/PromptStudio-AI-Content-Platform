@@ -1,226 +1,78 @@
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PromptStudio | AI Content Platform</title>
+
+    <title>PromptStudio - AI Writing Assistant</title>
+
     <link rel="stylesheet"
           href="{{ url_for('static', filename='css/style.css') }}">
+
 </head>
+
 <body>
 
-<div class="layout">
-    <aside class="sidebar">
-        <h2 class="logo">Prompt<span>Studio</span></h2>
-        <p class="side-label">WORKSPACE</p>
+<header class="landing-header">
 
-        <button class="nav-btn active" data-section="dashboard">Dashboard</button>
-        <button class="nav-btn" data-section="generator">Content Generator</button>
-        <button class="nav-btn" data-section="summarizer">Text Summarizer</button>
-        <button class="nav-btn" data-section="sentiment">Sentiment Analyzer</button>
+    <h2>✨ PromptStudio</h2>
 
-        <p class="side-label">MANAGEMENT</p>
-        <button class="nav-btn" data-section="history">Prompt History</button>
-        <button class="nav-btn" data-section="analytics">Analytics</button>
+    <nav>
+        <a href="{{ url_for('login') }}">Login</a>
+        <a href="{{ url_for('register') }}">Register</a>
+    </nav>
 
-        <div class="sidebar-footer">
-            AI Content Platform<br>
-            Internship Capstone Project
-        </div>
-    </aside>
+</header>
 
-    <main class="main">
-        <header class="topbar">
-            <div>
-                <h2>PromptStudio</h2>
-                <p>AI-powered content workspace</p>
-            </div>
-            <span class="status"><span></span> Workspace</span>
-        </header>
+<main class="landing-hero">
 
-        <!-- DASHBOARD -->
-        <section id="dashboard" class="page-section">
-            <div class="hero">
-                <p class="eyebrow">AI WRITING WORKSPACE</p>
-                <h1>Create with clarity.</h1>
-                <p>Turn better prompts into better content.</p>
-            </div>
+    <h1>Your AI-Powered Writing Assistant</h1>
 
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <p>Total Activities</p>
-                    <h2 id="totalActivities">0</h2>
-                </div>
-                <div class="stat-card">
-                    <p>AI Features</p>
-                    <h2>3</h2>
-                </div>
-                <div class="stat-card">
-                    <p>Platform Status</p>
-                    <h2 class="online">Ready</h2>
-                </div>
-            </div>
+    <p>
+        Generate content, summarize text, correct grammar
+        and improve your productivity using AI.
+    </p>
 
-            <h2 class="section-heading">Your workspace</h2>
-            <div class="feature-grid">
-                <button class="feature-card" data-go="generator">
-                    <span class="feature-icon">✍️</span>
-                    <h3>Content Generator</h3>
-                    <p>Create blogs, posts, emails and more.</p>
-                </button>
-                <button class="feature-card" data-go="summarizer">
-                    <span class="feature-icon">📝</span>
-                    <h3>Text Summarizer</h3>
-                    <p>Convert long text into clear summaries.</p>
-                </button>
-                <button class="feature-card" data-go="sentiment">
-                    <span class="feature-icon">💬</span>
-                    <h3>Sentiment Analyzer</h3>
-                    <p>Understand the emotion behind text.</p>
-                </button>
-            </div>
-        </section>
+    <div class="hero-buttons">
 
-        <!-- CONTENT GENERATOR -->
-        <section id="generator" class="page-section hidden">
-            <div class="page-heading">
-                <p class="eyebrow">AI WRITING ASSISTANT</p>
-                <h1>Content Generator</h1>
-                <p>Describe what you need and select your preferred style.</p>
-            </div>
+        <a href="{{ url_for('register') }}" class="primary-button">
+            Get Started
+        </a>
 
-            <div class="panel">
-                <label for="prompt">YOUR PROMPT</label>
-                <textarea id="prompt" rows="6"
-                    placeholder="Example: Write a blog about artificial intelligence..."></textarea>
+        <a href="{{ url_for('login') }}" class="secondary-button">
+            Login
+        </a>
 
-                <div class="form-grid">
-                    <div>
-                        <label for="contentType">CONTENT TYPE</label>
-                        <select id="contentType">
-                            <option>Blog Post</option>
-                            <option>Social Media Post</option>
-                            <option>Article</option>
-                            <option>Story</option>
-                            <option>Product Description</option>
-                            <option>Email</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="tone">WRITING TONE</label>
-                        <select id="tone">
-                            <option>Professional</option>
-                            <option>Friendly</option>
-                            <option>Creative</option>
-                            <option>Academic</option>
-                            <option>Persuasive</option>
-                        </select>
-                    </div>
-                </div>
+    </div>
 
-                <button class="primary-btn" id="generateBtn">Generate Content</button>
+</main>
 
-                <div class="result-area">
-                    <div class="result-header">
-                        <label>YOUR RESULT</label>
-                        <button class="copy-btn" data-copy="generateResult">Copy Result</button>
-                    </div>
-                    <div id="generateResult" class="result-box">Your generated content will appear here.</div>
-                </div>
-            </div>
-        </section>
+<section class="landing-features">
 
-        <!-- TEXT SUMMARIZER -->
-        <section id="summarizer" class="page-section hidden">
-            <div class="page-heading">
-                <p class="eyebrow">AI TEXT ASSISTANT</p>
-                <h1>Text Summarizer</h1>
-                <p>Turn lengthy text into meaningful summaries.</p>
-            </div>
+    <h2>Explore AI Features</h2>
 
-            <div class="panel">
-                <label for="summaryText">ENTER YOUR TEXT</label>
-                <textarea id="summaryText" rows="8"
-                    placeholder="Paste your paragraph or article here..."></textarea>
+    <div class="tools-grid">
 
-                <label for="summaryLength">SUMMARY LENGTH</label>
-                <select id="summaryLength">
-                    <option>Short</option>
-                    <option selected>Medium</option>
-                    <option>Long</option>
-                </select>
+        <div class="tool-card">✍️ AI Content Generator</div>
+        <div class="tool-card">📝 Text Summarizer</div>
+        <div class="tool-card">😊 Sentiment Analysis</div>
+        <div class="tool-card">📧 Email Generator</div>
+        <div class="tool-card">🔄 Paraphrasing Tool</div>
+        <div class="tool-card">📖 Grammar Correction</div>
+        <div class="tool-card">📱 Social Media Caption</div>
+        <div class="tool-card">💡 Blog Title Generator</div>
 
-                <button class="primary-btn" id="summarizeBtn">Generate Summary</button>
+    </div>
 
-                <div class="result-area">
-                    <div class="result-header">
-                        <label>YOUR SUMMARY</label>
-                        <button class="copy-btn" data-copy="summaryResult">Copy Summary</button>
-                    </div>
-                    <div id="summaryResult" class="result-box">Your summary will appear here.</div>
-                </div>
-            </div>
-        </section>
+</section>
 
-        <!-- SENTIMENT ANALYZER -->
-        <section id="sentiment" class="page-section hidden">
-            <div class="page-heading">
-                <p class="eyebrow">AI TEXT ANALYSIS</p>
-                <h1>Sentiment Analyzer</h1>
-                <p>Discover the emotional tone of your text.</p>
-            </div>
+<footer>
+    <p>© 2026 PromptStudio. All Rights Reserved.</p>
+</footer>
 
-            <div class="panel">
-                <label for="sentimentText">ENTER YOUR TEXT</label>
-                <textarea id="sentimentText" rows="7"
-                    placeholder="Enter a review, comment or sentence..."></textarea>
-
-                <button class="primary-btn" id="sentimentBtn">Analyze Sentiment</button>
-
-                <div class="result-area">
-                    <div class="result-header">
-                        <label>ANALYSIS RESULT</label>
-                        <button class="copy-btn" data-copy="sentimentResult">Copy Result</button>
-                    </div>
-                    <div id="sentimentResult" class="result-box">Your sentiment analysis will appear here.</div>
-                </div>
-            </div>
-        </section>
-
-        <!-- HISTORY -->
-        <section id="history" class="page-section hidden">
-            <div class="page-heading">
-                <p class="eyebrow">MANAGEMENT</p>
-                <h1>Prompt History</h1>
-                <p>Review your recent AI activities.</p>
-            </div>
-            <div id="historyList" class="history-list">
-                Loading history...
-            </div>
-        </section>
-
-        <!-- ANALYTICS -->
-        <section id="analytics" class="page-section hidden">
-            <div class="page-heading">
-                <p class="eyebrow">PERFORMANCE OVERVIEW</p>
-                <h1>Analytics Dashboard</h1>
-                <p>Explore how you use your AI workspace.</p>
-            </div>
-            <div class="panel">
-                <h3>Total Activities</h3>
-                <h1 id="analyticsTotal">0</h1>
-                <h3>Feature Usage</h3>
-                <div id="analyticsBars"></div>
-            </div>
-        </section>
-
-        <footer>
-            PromptStudio · AI Content Platform · Internship Capstone Project
-        </footer>
-    </main>
-</div>
-
-<script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>

@@ -1,0 +1,60 @@
+
+{% extends "base.html" %}
+
+{% block title %}Prompt History - PromptStudio{% endblock %}
+
+{% block page_heading %}Prompt History{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <h1>Your AI History</h1>
+
+    <p>View your previously generated AI results.</p>
+
+</div>
+
+<div class="history-container">
+
+    {% if history %}
+
+        {% for item in history %}
+
+            <div class="history-card">
+
+                <h3>{{ item.feature }}</h3>
+
+                <p><strong>Input:</strong></p>
+
+                <p>{{ item.user_input or item.input_text or '' }}</p>
+
+                <p><strong>AI Result:</strong></p>
+
+                <p>{{ item.ai_response or item.output_text or item.result or '' }}</p>
+
+                <small>{{ item.created_at }}</small>
+
+            </div>
+
+        {% endfor %}
+
+    {% else %}
+
+        <div class="empty-state">
+
+            <h3>No History Found</h3>
+
+            <p>Your generated AI results will appear here.</p>
+
+            <a href="{{ url_for('dashboard') }}">
+                Go to Dashboard
+            </a>
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

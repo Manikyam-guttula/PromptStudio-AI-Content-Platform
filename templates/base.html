@@ -1,0 +1,231 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>
+        {% block title %}PromptStudio - AI Writing Assistant{% endblock %}
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+    {% block extra_css %}{% endblock %}
+
+</head>
+
+<body>
+
+    {% set show_app_layout = session.get('user_id') and request.endpoint not in ['login', 'register'] %}
+
+    {% if show_app_layout %}
+
+    <!-- =====================================
+         MAIN APPLICATION LAYOUT
+    ====================================== -->
+
+    <div class="app-container">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+
+            <div class="sidebar-logo">
+
+                <div class="sidebar-logo-icon">✨</div>
+
+                <div>
+                    <h2>PromptStudio</h2>
+                    <span>AI Writing Assistant</span>
+                </div>
+
+            </div>
+
+            <!-- NAVIGATION -->
+            <nav class="sidebar-nav">
+
+                <p class="sidebar-section-title">MAIN MENU</p>
+
+                <a href="{{ url_for('dashboard') }}"
+                   class="sidebar-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                    <span>🏠</span>
+                    Dashboard
+                </a>
+
+                <p class="sidebar-section-title">AI TOOLS</p>
+
+                <a href="{{ url_for('content') }}" class="sidebar-link">
+                    <span>✍️</span>
+                    Content Generator
+                </a>
+
+                <a href="{{ url_for('summarizer') }}" class="sidebar-link">
+                    <span>📝</span>
+                    Text Summarizer
+                </a>
+
+                <a href="{{ url_for('sentiment') }}" class="sidebar-link">
+                    <span>😊</span>
+                    Sentiment Analysis
+                </a>
+
+                <a href="{{ url_for('email') }}" class="sidebar-link">
+                    <span>📧</span>
+                    Email Generator
+                </a>
+
+                <a href="{{ url_for('paraphrase') }}" class="sidebar-link">
+                    <span>🔄</span>
+                    Paraphrasing
+                </a>
+
+                <a href="{{ url_for('grammar') }}" class="sidebar-link">
+                    <span>✅</span>
+                    Grammar Correction
+                </a>
+
+                <a href="{{ url_for('caption') }}" class="sidebar-link">
+                    <span>📱</span>
+                    Social Media Caption
+                </a>
+
+                <a href="{{ url_for('blog_titles') }}" class="sidebar-link">
+                    <span>💡</span>
+                    Blog Title Generator
+                </a>
+
+                <p class="sidebar-section-title">ACTIVITY</p>
+
+                <a href="{{ url_for('history') }}" class="sidebar-link">
+                    <span>📚</span>
+                    History
+                </a>
+
+                <a href="{{ url_for('analytics') }}" class="sidebar-link">
+                    <span>📊</span>
+                    Analytics
+                </a>
+
+            </nav>
+
+            <!-- SIDEBAR BOTTOM -->
+            <div class="sidebar-bottom">
+
+                <div class="sidebar-user">
+
+                    <div class="user-avatar">
+                        {{ session.get('username', 'U')[0]|upper }}
+                    </div>
+
+                    <div class="user-details">
+                        <strong>
+                            {{ session.get('username', 'User') }}
+                        </strong>
+
+                        <span>Personal Workspace</span>
+                    </div>
+
+                </div>
+
+                <a href="{{ url_for('logout') }}" class="logout-link">
+                    🚪 Logout
+                </a>
+
+            </div>
+
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="main-content">
+
+            <!-- TOPBAR -->
+            <header class="topbar">
+
+                <div class="topbar-title">
+                    <h2>
+                        {% block page_heading %}Dashboard{% endblock %}
+                    </h2>
+                </div>
+
+                <div class="topbar-user">
+                    Welcome, {{ session.get('username') }} 👋
+                </div>
+
+            </header>
+
+            <section class="content-area">
+
+    {% else %}
+
+    <!-- =====================================
+         LOGIN / REGISTER LAYOUT
+    ====================================== -->
+
+    <div class="auth-shell">
+
+    {% endif %}
+
+
+    <!-- =====================================
+         FLASH MESSAGES
+    ====================================== -->
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+        {% if messages %}
+
+            {% for category, message in messages %}
+
+                <div class="alert alert-{{ category }}">
+                    {{ message }}
+                </div>
+
+            {% endfor %}
+
+        {% endif %}
+
+    {% endwith %}
+
+
+    <!-- =====================================
+         SINGLE CONTENT BLOCK
+         DO NOT DUPLICATE THIS BLOCK
+    ====================================== -->
+
+    {% block content %}{% endblock %}
+
+
+    <!-- =====================================
+         CLOSE PAGE LAYOUT
+    ====================================== -->
+
+    {% if show_app_layout %}
+
+            </section>
+
+        </main>
+
+    </div>
+
+    {% else %}
+
+    </div>
+
+    {% endif %}
+
+
+    <!-- JAVASCRIPT -->
+    <script
+        src="{{ url_for('static', filename='js/app.js') }}"
+    ></script>
+
+    {% block extra_js %}{% endblock %}
+
+</body>
+
+</html>
